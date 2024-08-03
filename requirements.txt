@@ -1,0 +1,12 @@
+mlx==0.16.1
+mlx-lm==0.16.1
+numpy==1.26.4
+matplotlib==3.9.1
+tqdm==4.66.4
+psutil==6.0.0
+streamlit==1.36.0
+pandas==2.2.2
+plotly==5.23.0
+nltk==3.8.1
+scikit-learn==1.5.1
+joblib==1.4.2
