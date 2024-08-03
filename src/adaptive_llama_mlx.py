@@ -15,7 +15,7 @@ class AdaptiveLlamaProxy:
         self.max_memory_usage = max_memory_usage
         self.model_paths = {
             '2bit': "mlx-community/Meta-Llama-3-8B-Instruct-4bit",
-            'full': "/Users/jarrodbarnes/Meta-Llama-3.1-8B-Instruct-bf16",
+            'full': "mlx-community/Meta-Llama-3.1-8B-bf16",
             '4bit': "mlx-community/Meta-Llama-3.1-70B-Instruct-4bit",
             '8bit': "mlx-community/Meta-Llama-3.1-70B-Instruct-8bit"
         }
