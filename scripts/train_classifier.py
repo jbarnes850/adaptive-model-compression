@@ -1,113 +1,93 @@
 import sys
 import os
-import joblib
-import json
+from datasets import load_dataset, concatenate_datasets
 from sklearn.model_selection import train_test_split
-import threading
-import time
+from sklearn.metrics import classification_report
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.task_classifier import TaskClassifier
 
 CLASSIFIER_PATH = os.path.join('data', 'task_classifier.joblib')
-DATA_PATH = os.path.join('data', 'task_classification_data.json')
-UPDATE_THRESHOLD = 1000  # Number of new samples before updating
-UPDATE_INTERVAL = 86400  # Time in seconds between updates (e.g., 24 hours)
 
-class ClassifierManager:
-    def __init__(self):
-        self.classifier = self.load_or_create_classifier()
-        self.new_data = []
-        self.lock = threading.Lock()
-        self.last_update_time = time.time()
+def load_mmlu_data():
+    ds = load_dataset("cais/mmlu", "all")
+    
+    # Combine all available splits
+    all_data = concatenate_datasets([ds[split] for split in ds.keys() if split != 'auxiliary_train'])
+    
+    # Convert to pandas DataFrame
+    df = all_data.to_pandas()
+    
+    # Print subject information
+    print("Subject information:")
+    print(df['subject'].value_counts())
+    
+    # Print a few sample questions from each subject
+    for subject in df['subject'].unique():
+        print(f"\nSample questions from {subject}:")
+        print(df[df['subject'] == subject]['question'].head(3))
+    
+    # Map subject difficulty to our complexity levels
+    difficulty_mapping = {
+        'elementary': 'simple',
+        'high_school': 'medium',
+        'college': 'complex',
+        'professional': 'complex'
+    }
+    
+    df['complexity'] = df['subject'].map(lambda x: difficulty_mapping.get(x.split('_')[0], 'medium'))
+    
+    print("\nDataset information:")
+    print(df['subject'].value_counts())
+    
+    print("\nComplexity distribution:")
+    print(df['complexity'].value_counts())
+    
+    return df['question'].tolist(), df['complexity'].tolist()
 
-    def load_or_create_classifier(self):
-        if os.path.exists(CLASSIFIER_PATH):
-            print("Loading existing classifier...")
-            classifier = TaskClassifier()
-            try:
-                classifier.load_model(CLASSIFIER_PATH)
-            except Exception as e:
-                print(f"Error loading existing classifier: {str(e)}")
-                print("Creating new classifier...")
-                queries, labels = self.load_classification_data()
-                classifier.train(queries, labels)
-                classifier.save_model(CLASSIFIER_PATH)
-            return classifier
-        else:
-            print("Creating new classifier...")
-            classifier = TaskClassifier()
-            queries, labels = self.load_classification_data()
-            classifier.train(queries, labels)
-            classifier.save_model(CLASSIFIER_PATH)
-            return classifier
+def train_classifier():
+    print("Loading MMLU data...")
+    queries, labels = load_mmlu_data()
 
-    def load_classification_data(self):
-        with open(DATA_PATH, 'r') as f:
-            data = json.load(f)
-        
-        queries = []
-        labels = []
-        for complexity, examples in data.items():
-            queries.extend(examples)
-            labels.extend([complexity] * len(examples))
-        
-        return queries, labels
+    print(f"\nTotal samples: {len(queries)}")
 
-    def classify(self, query):
-        with self.lock:
-            return self.classifier.classify(query)
+    classifier = TaskClassifier()
+    classifier.train(queries, labels)
 
-    def add_new_data(self, query, label):
-        self.new_data.append((query, label))
+    print("Saving classifier...")
+    classifier.save_model(CLASSIFIER_PATH)
+    print(f"Classifier saved to {CLASSIFIER_PATH}")
 
-    def update_classifier(self):
-        if len(self.new_data) >= UPDATE_THRESHOLD and time.time() - self.last_update_time >= UPDATE_INTERVAL:
-            print("Updating classifier...")
-            new_queries, new_labels = zip(*self.new_data)
-            
-            # Load all historical data
-            historical_queries, historical_labels = self.load_classification_data()
-            
-            # Combine historical and new data
-            all_queries = historical_queries + list(new_queries)
-            all_labels = historical_labels + list(new_labels)
-            
-            # Train the classifier on all data
-            self.classifier.train(all_queries, all_labels)
-            
-            self.new_data.clear()
-            self.last_update_time = time.time()
-            
-            # Save the updated classifier
-            self.classifier.save_model(CLASSIFIER_PATH)
-            print("Classifier updated and saved.")
-
-def background_updater(manager):
-    while True:
-        time.sleep(UPDATE_INTERVAL)
-        manager.update_classifier()
+    return classifier
 
 def main():
-    manager = ClassifierManager()
-    
-    # Start background updater thread
-    updater_thread = threading.Thread(target=background_updater, args=(manager,), daemon=True)
-    updater_thread.start()
+    classifier = train_classifier()
 
-    # Example usage
-    print("Classifying a sample query...")
-    sample_query = "What is the capital of France?"
-    classification = manager.classify(sample_query)
-    print(f"Classification: {classification}")
+    print("\nClassifying sample queries...")
+    sample_queries = [
+        "What's the color of the sky?",
+        "How many days are in a week?",
+        "What's the capital of France?",
+        "How do I make a sandwich?",
+        "Explain the basics of photosynthesis",
+        "How does a combustion engine work?",
+        "Analyze the economic impact of climate change",
+        "Discuss the philosophical implications of artificial intelligence",
+        "What are the main causes of climate change?",
+        "Explain the concept of supply and demand in economics",
+        "How does quantum computing differ from classical computing?",
+        "Describe the process of evolution",
+        "What are the implications of blockchain technology?",
+        "How does the human brain process information?"
+    ]
 
-    # Keep the main thread running
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("Exiting...")
+    for query in sample_queries:
+        classification, confidence = classifier.classify_with_confidence(query)
+        print(f"Query: '{query}'")
+        print(f"Classification: {classification}")
+        print(f"Confidence: {confidence:.2f}\n")
 
 if __name__ == "__main__":
     main()
