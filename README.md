@@ -1,35 +1,35 @@
-# Adaptive Llama 3.1 Proxy (ALP 3.1)
+# Adaptive LLaMA 3.1 Proxy (ALP 3.1)
 
 <div style="display: flex; justify-content: space-between;">
   <img src="./assets/Demo Screenshot 1.png" alt="Demo Screenshot 1" width="48%">
   <img src="./assets/Demo Screenshot 2.png" alt="Demo Screenshot 2" width="48%">
 </div>
 
-Adaptive model compression dynamically adjusts the size and complexity of machine learning models based on the task at hand, balancing performance and efficiency. This approach allows for optimal use of computational resources while maintaining high-quality outputs.
+Dynamic model selection optimizes the use of pre-compressed machine learning models based on the task at hand, balancing performance and efficiency. This approach allows for optimal use of computational resources while maintaining high-quality outputs.
 
 ## Project Overview
 
-Adaptive LLaMA Proxy (ALP 3.1) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates on-device adaptive model compression for large language models (LLMs), specifically Llama 3.1 8B, 70B, and 405B. ALP 3.1 dynamically selects the most appropriate compressed version of Llama 3.1 based on the complexity of the input task, all while running locally on the user's device. This approach optimizes for different tasks while balancing performance and efficiency, without relying on cloud resources.
+Adaptive LLaMA Proxy (ALP 3.1) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates on-device dynamic selection of pre-compressed large language models (LLMs), specifically Llama 3.1 8B 4-bit quantized, 70B 4-bit quantized, and 405B 2-bit quantized. ALP 3.1 uses a lightweight ML classifier to determine task complexity and dynamically select the most appropriate pre-compressed version of Llama 3.1 based on the input task, all while running locally on the user's device. This approach optimizes for different tasks while balancing performance and efficiency, without relying on cloud resources.
 
-ALP 3.1 showcases a novel approach to local language model deployment, adapting to task complexity in real-time. By optimizing on-device resource usage while maintaining high-quality outputs, it enhances privacy and reduces latency compared to cloud-based solutions.
+ALP 3.1 showcases a novel approach to local language model deployment, adapting to task complexity in real-time. By optimizing on-device resource usage through intelligent model selection, it maintains high-quality outputs while enhancing privacy and reducing latency compared to cloud-based solutions.
 
 ## Key Features
 
-- Multi-stage compression using different quantization levels (2-bit, 4-bit, 8-bit, and full precision)
-- Dynamic task complexity classification using a lightweight machine learning model
+- Dynamic selection from multiple pre-compressed Llama 3.1 models (8B 4-bit, 70B 4-bit, and 405B 2-bit quantized)
+- Task complexity classification using a lightweight machine learning model
 - Adaptive model selection based on input complexity
 - Memory-efficient model loading and unloading
-- Continuous learning and classifier updates
+- Local execution for enhanced privacy and reduced latency
 - Comprehensive evaluation suite for accuracy, latency, and memory usage
 - Interactive web interface for exploring ALP's capabilities
 
 ## How It Works
 
-ALP uses a lightweight machine learning model to classify the complexity of incoming tasks. This classifier was fine-tuned based on the MMLU dataset to improve its accuracy across various domains. Based on this classification, it selects an appropriately compressed version of the Llama 3.1 model:
+ALP uses a lightweight machine learning classifier to assess the complexity of incoming tasks. Based on this classification, it selects the most appropriate pre-compressed version of the Llama 3.1 model:
 
-- 8B 4-bit quantized
-- 70B 4-bit quantized
-- 405B 2-bit quantized
+- 8B 4-bit quantized for simple tasks
+- 70B 4-bit quantized for medium complexity tasks
+- 405B 2-bit quantized for complex tasks
 
 All models are implemented using the MLX framework, which enables efficient on-device inference. This adaptive approach ensures optimal resource usage while maintaining high-quality outputs.
 
