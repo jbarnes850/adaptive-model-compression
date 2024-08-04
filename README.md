@@ -1,6 +1,9 @@
 # Adaptive LLaMA 3.1 Proxy (ALP 3.1)
 
-![Adaptive Model Compression GIF](./assets/Adaptive%20Model%20Compression.gif)
+<div style="display: flex; justify-content: space-between;">
+  <img src="./assets/Demo Screenshot 1.png" alt="Demo Screenshot 1" width="48%">
+  <img src="./assets/Demo Screenshot 2.png" alt="Demo Screenshot 2" width="48%">
+</div>
 
 Adaptive model compression dynamically adjusts the size and complexity of machine learning models based on the task at hand, balancing performance and efficiency. This approach allows for optimal use of computational resources while maintaining high-quality outputs.
 
