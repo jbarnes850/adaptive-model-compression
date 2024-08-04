@@ -1,25 +1,35 @@
 import os
+import time
 import psutil
 import logging
-import time
+from typing import Dict, Any, Tuple
 from mlx_lm import load, generate
-from functools import lru_cache
-import gc
 from src.task_classifier import TaskClassifier
+import concurrent.futures
 
 class AdaptiveLlamaProxy:
-    def __init__(self, max_memory_usage=90, model_cache_size=2):
-        self.models = {}
-        self.tokenizers = {}
+    def __init__(self):
         self.logger = self.setup_logger()
-        self.max_memory_usage = max_memory_usage
+        self.task_classifier = TaskClassifier()
+        self.load_classifier()
+        self.models: Dict[str, Tuple[Any, Any]] = {}
         self.model_paths = {
-            '2bit': "mlx-community/Meta-Llama-3-8B-Instruct-4bit",
-            'full': "mlx-community/Meta-Llama-3.1-8B-bf16",
-            '4bit': "mlx-community/Meta-Llama-3.1-70B-Instruct-4bit",
-            '8bit': "mlx-community/Meta-Llama-3.1-70B-Instruct-8bit"
+            'simple': "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+            'medium': "mlx-community/Meta-Llama-3.1-70B-Instruct-4bit",
+            'complex': "mlx-community/Meta-Llama-3.1-405B-2bit"
         }
-        self.model_cache = lru_cache(maxsize=model_cache_size)(self._load_model)
+        self.model_sizes = {
+            'simple': 8,
+            'medium': 70,
+            'complex': 405
+        }
+
+    def load_classifier(self):
+        classifier_path = os.path.join('data', 'task_classifier.joblib')
+        if os.path.exists(classifier_path):
+            self.task_classifier.load_model(classifier_path)
+        else:
+            raise FileNotFoundError(f"Classifier model not found at {classifier_path}. Please train the classifier first.")
 
     def setup_logger(self):
         logger = logging.getLogger(__name__)
@@ -30,57 +40,55 @@ class AdaptiveLlamaProxy:
         logger.addHandler(handler)
         return logger
 
-    def _load_model(self, model_type):
-        if model_type not in self.model_paths:
-            raise ValueError(f"Unknown model type: {model_type}")
-        
-        path = self.model_paths[model_type]
-        self.logger.info(f"Loading {model_type} model...")
-        
-        available_memory = psutil.virtual_memory().available / (1024 * 1024 * 1024)  # in GB
-        self.logger.info(f"Available memory before loading: {available_memory:.2f} GB")
-        
-        if psutil.virtual_memory().percent > self.max_memory_usage:
-            self.unload_least_used_model()
-        
-        try:
-            model, tokenizer = load(path)
-            self.models[model_type] = model
-            self.tokenizers[model_type] = tokenizer
-            self.logger.info(f"{model_type.capitalize()} model loaded successfully")
-            return model, tokenizer
-        except Exception as e:
-            self.logger.error(f"Failed to load {model_type} model: {str(e)}")
-            raise
+    def load_model(self, complexity: str, timeout: int = 300):
+        if complexity not in self.models:
+            self.logger.info(f"Loading {complexity} model...")
+            if not self.check_memory(complexity):
+                raise MemoryError(f"Not enough memory to load {complexity} model")
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(load, self.model_paths[complexity])
+                    model, tokenizer = future.result(timeout=timeout)
+                self.models[complexity] = (model, tokenizer)
+                self.logger.info(f"{complexity.capitalize()} model loaded successfully.")
+            except concurrent.futures.TimeoutError:
+                raise TimeoutError(f"Loading {complexity} model timed out after {timeout} seconds")
+            except Exception as e:
+                raise RuntimeError(f"Error loading {complexity} model: {str(e)}")
+        return self.models[complexity]
 
-    def classify_task(self, prompt):
-        if not hasattr(self, 'task_classifier'):
-            self.task_classifier = TaskClassifier()
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            model_path = os.path.join(current_dir, '..', 'data', 'task_classifier.joblib')
-            self.task_classifier.load_model(model_path)
-    
-        classification = self.task_classifier.classify_with_confidence(prompt)
+    def check_memory(self, complexity: str) -> bool:
+        available_memory = psutil.virtual_memory().available / (1024 ** 3)  # Available memory in GB
+        required_memory = self.model_sizes[complexity] * 1.5  # Estimate 1.5x model size for safety
+        return available_memory > required_memory
+
+    def classify_task(self, prompt: str) -> str:
+        classification, confidence = self.task_classifier.classify_with_confidence(prompt)
+        self.logger.info(f"Task classified as {classification} with confidence {confidence:.2f}")
         return classification if classification != "Uncertain" else "medium"
 
-    def select_model(self, task_complexity):
+    def select_model(self, task_complexity: str) -> str:
         complexity_map = {
-            'very_simple': '2bit',
-            'simple': 'full',
-            'medium': '4bit',
-            'complex': '8bit'
+            'very_simple': 'simple',
+            'simple': 'simple',
+            'medium': 'medium',
+            'complex': 'complex'
         }
-        return complexity_map.get(task_complexity, 'full')
+        return complexity_map.get(task_complexity, 'medium')
 
-    def adaptive_generate(self, prompt, task_complexity=None):
+    def adaptive_generate(self, prompt: str, task_complexity: str = None) -> Dict[str, Any]:
         if task_complexity is None:
             task_complexity = self.classify_task(prompt)
         
         model_type = self.select_model(task_complexity)
-        model, tokenizer = self.model_cache(model_type)
+        try:
+            model, tokenizer = self.load_model(model_type)
+        except Exception as e:
+            self.logger.error(f"Error loading model: {str(e)}")
+            return {'error': str(e)}
         
         start_time = time.time()
-        response = generate(model, tokenizer, prompt=prompt, verbose=True)
+        response = self.generate_response(prompt, model, tokenizer)
         generation_time = time.time() - start_time
         
         memory_usage = psutil.virtual_memory().percent
@@ -95,28 +103,21 @@ class AdaptiveLlamaProxy:
             'memory_usage': memory_usage
         }
 
-    def get_memory_usage(self):
+    def generate_response(self, prompt: str, model: Any, tokenizer: Any) -> str:
+        response = generate(model, tokenizer, prompt=prompt, verbose=True)
+        return response
+
+    def get_memory_usage(self) -> float:
         return psutil.virtual_memory().percent
 
-    def unload_least_used_model(self):
-        if self.models:
-            least_used = min(self.models, key=lambda k: self.model_cache.cache_info().hits)
-            self.unload_model(least_used)
+    def get_loaded_models(self) -> list:
+        return list(self.models.keys())
 
-    def unload_model(self, model_type):
-        if model_type in self.models:
-            del self.models[model_type]
-            del self.tokenizers[model_type]
-            self.model_cache.cache_clear()
-            gc.collect()
-            self.logger.info(f"Unloaded {model_type} model")
+    def unload_model(self, complexity: str):
+        if complexity in self.models:
+            del self.models[complexity]
+            self.logger.info(f"{complexity.capitalize()} model unloaded.")
 
     def unload_all_models(self):
         self.models.clear()
-        self.tokenizers.clear()
-        self.model_cache.cache_clear()
-        gc.collect()
-        self.logger.info("All models unloaded")
-
-    def get_loaded_models(self):
-        return list(self.models.keys())
+        self.logger.info("All models unloaded.")

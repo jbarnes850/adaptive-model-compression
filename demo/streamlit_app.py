@@ -13,7 +13,15 @@ from src.adaptive_llama_mlx import AdaptiveLlamaProxy
 
 @st.cache_resource
 def load_alp() -> AdaptiveLlamaProxy:
-    return AdaptiveLlamaProxy()
+    try:
+        return AdaptiveLlamaProxy()
+    except FileNotFoundError as e:
+        st.error(f"Error: {str(e)}")
+        st.error("Please train the classifier before running the demo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred while initializing the AdaptiveLlamaProxy: {str(e)}")
+        return None
 
 def generate_response(alp: AdaptiveLlamaProxy, prompt: str, mode: str) -> Dict[str, Any]:
     start_time = time.time()
@@ -66,6 +74,8 @@ def main():
     st.title("Adaptive LLaMA Proxy Demo")
     
     alp = load_alp()
+    if alp is None:
+        return
 
     st.sidebar.header("Mode Selection")
     mode = st.sidebar.radio("Select Mode", ["Adaptive", "Simple", "Medium", "Complex"])
@@ -89,11 +99,12 @@ def main():
         else:
             st.warning("Please enter a prompt.")
 
+    st.sidebar.write("Loaded Models:", ", ".join(alp.get_loaded_models()))
     st.sidebar.header("About")
     st.sidebar.info("""
     This demo showcases the Adaptive LLaMA Proxy system. 
     It dynamically selects the most appropriate model based on task complexity, 
-    balancing performance and efficiency using cloud-hosted models.
+    balancing performance and efficiency using locally-hosted MLX models.
     """)
 
 if __name__ == "__main__":
