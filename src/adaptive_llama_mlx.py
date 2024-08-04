@@ -23,6 +23,10 @@ class AdaptiveLlamaProxy:
             'medium': 70,
             'complex': 405
         }
+        # Set the cache directory
+        self.cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "adaptive_llama_proxy")
+        os.environ['TRANSFORMERS_CACHE'] = self.cache_dir
+        os.environ['HF_HOME'] = self.cache_dir
 
     def load_classifier(self):
         classifier_path = os.path.join('data', 'task_classifier.joblib')
@@ -47,7 +51,7 @@ class AdaptiveLlamaProxy:
                 raise MemoryError(f"Not enough memory to load {complexity} model")
             try:
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(load, self.model_paths[complexity])
+                    future = executor.submit(load, self.model_paths[complexity], cache_dir=self.cache_dir)
                     model, tokenizer = future.result(timeout=timeout)
                 self.models[complexity] = (model, tokenizer)
                 self.logger.info(f"{complexity.capitalize()} model loaded successfully.")
