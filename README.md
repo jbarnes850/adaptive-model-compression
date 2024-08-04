@@ -9,7 +9,9 @@ Adaptive model compression dynamically adjusts the size and complexity of machin
 
 ## Project Overview
 
-Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates adaptive model compression for Llama 3.1 8B, 70B, and 405B, optimizing for different tasks while balancing performance and efficiency. ALP showcases a novel approach to language model deployment, adapting to task complexity in real-time.
+Adaptive LLaMA Proxy (ALP 3.1) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates on-device adaptive model compression for large language models (LLMs), specifically Llama 3.1 8B, 70B, and 405B. ALP 3.1 dynamically selects the most appropriate compressed version of Llama 3.1 based on the complexity of the input task, all while running locally on the user's device. This approach optimizes for different tasks while balancing performance and efficiency, without relying on cloud resources.
+
+ALP 3.1 showcases a novel approach to local language model deployment, adapting to task complexity in real-time. By optimizing on-device resource usage while maintaining high-quality outputs, it enhances privacy and reduces latency compared to cloud-based solutions.
 
 ## Key Features
 
@@ -23,7 +25,16 @@ Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South 
 
 ## How It Works
 
-ALP uses a lightweight machine learning model to classify the complexity of incoming tasks. Based on this classification, it selects an appropriately compressed version of the Llama 3.1 model (2-bit, 4-bit, 8-bit, or full precision). This adaptive approach ensures optimal resource usage while maintaining high-quality outputs.
+ALP uses a lightweight machine learning model to classify the complexity of incoming tasks. This classifier was fine-tuned based on the MMLU dataset to improve its accuracy across various domains. Based on this classification, it selects an appropriately compressed version of the Llama 3.1 model:
+
+- 8B 4-bit quantized
+- 70B 4-bit quantized
+- 405B 2-bit quantized
+
+All models are implemented using the MLX framework, which enables efficient on-device inference. This adaptive approach ensures optimal resource usage while maintaining high-quality outputs.
+
+The biggest technical challenge in developing ALP 3.1 was implementing efficient model loading and unloading mechanisms. These mechanisms are crucial for minimizing memory usage while maintaining low latency, especially when switching between different model sizes and quantization levels.
+
 
 ## Project Structure
 
