@@ -12,14 +12,45 @@ Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South 
 - Memory-efficient model loading and unloading
 - Continuous learning and classifier updates
 - Comprehensive evaluation suite for accuracy, latency, and memory usage
-- Streamlit demo for interactive exploration
+- Interactive web interface for exploring ALP's capabilities
+
+## Project Structure
+
+The project consists of two main components:
+
+1. Backend: Python-based API using FastAPI and MLX framework
+2. Frontend: Next.js application with React and TypeScript
+
+### Backend Structure
+
+- `src/`: Core implementation files
+  - `adaptive_llama_mlx.py`: Main implementation of the Adaptive LLaMA Proxy
+  - `task_classifier.py`: Task complexity classifier
+  - `api.py`: FastAPI application for serving the ALP
+- `data/`: Data files for training and evaluation
+- `scripts/`: Utility scripts for training and evaluation
+- `tests/`: Unit tests
+- `demo/`: Streamlit demo application (deprecated, see frontend for new interface)
+
+### Frontend Structure
+
+- `src/app/`: Main application code
+  - `components/`: React components
+  - `context/`: React context for state management
+  - `lib/`: Utility functions and API calls
+  - `api/`: API routes for the Next.js backend
 
 ## Prerequisites
 
+### Backend
 - Python 3.8+
 - MLX framework
 - 16GB+ RAM
 - Access to Llama 3.1 model files (subject to licensing restrictions)
+
+### Frontend
+- Node.js 14.x or later
+- npm 6.x or later
 
 ## Installation
 
@@ -29,57 +60,69 @@ Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South 
    cd adaptive-llama-proxy
    ```
 
-2. Install the required dependencies:
+2. Set up the backend:
    ```
+   cd backend
    pip install -r requirements.txt
    ```
 
-3. Set up the Llama 3.1 model files according to the provided instructions (not included in this repository due to licensing).
+3. Set up the frontend:
+   ```
+   cd ../frontend
+   npm install
+   ```
+
+4. Set up environment variables:
+   - Backend: Create a `.env` file in the `backend` directory with:
+     ```
+     API_KEY=your_secret_api_key
+     ```
+   - Frontend: Create a `.env.local` file in the `frontend` directory with:
+     ```
+     NEXT_PUBLIC_API_URL=http://localhost:8000
+     API_KEY=your_secret_api_key
+     ```
+
+5. Set up the Llama 3.1 model files according to the provided instructions (not included in this repository due to licensing).
 
 ## Usage
 
-To run the Adaptive LLaMA Proxy:
+1. Start the backend server:
+   ```
+   cd backend
+   python scripts/run_api.py
+   ```
 
-python src/adaptive_llama_mlx.py
+2. In a new terminal, start the frontend development server:
+   ```
+   cd frontend
+   npm run dev
+   ```
 
+3. Open your browser and navigate to `http://localhost:3000` to access the ALP interface.
 
-This will start an interactive session where you can input prompts and receive responses from the appropriate model based on task complexity.
+## Key Components
 
-## Project Structure
+- InputTab: Handles user input and complexity analysis
+- ModelVisualization: Visualizes the selected model based on input complexity
+- ResponseTab: Shows the generated response from the model
+- PerformanceMetricsTab: Displays performance metrics for the current request
+- PerformanceDashboard: Shows cumulative performance metrics and model usage statistics
+- ComparisonMode: Allows users to compare results from different model compressions
 
-- `src/`: Core implementation files
-  - `adaptive_llama_mlx.py`: Main implementation of the Adaptive LLaMA Proxy
-  - `task_classifier.py`: Task complexity classifier
-- `data/`: Data files for training and evaluation
-- `scripts/`: Utility scripts for training and evaluation
-  - `train_classifier.py`: Script for training and updating the task classifier
-  - `evaluate_model.py`: Comprehensive evaluation suite
-- `tests/`: Unit tests
-- `demo/`: Streamlit demo application
+## API Integration
 
-## Task Classifier
-
-The task classifier is a crucial component of ALP. To train or update the classifier:
-
-python scripts/train_classifier.py
-
-
-This script handles both initial training and continuous updates based on new data.
+The frontend communicates with the backend API through functions defined in `src/app/lib/api.ts`. The actual API calls are proxied through Next.js API routes in `src/app/api/` to avoid CORS issues and add an additional layer of security.
 
 ## Evaluation
 
-To run the evaluation suite:
+To run the backend evaluation suite:
 
+cd backend
 python scripts/evaluate_model.py
 
-This generates a detailed report on model performance across different task complexities, including accuracy, latency, and memory usage metrics. Results are visualized and saved as `evaluation_results.png`.
 
-## Demo
-
-Experience ALP's capabilities through our Streamlit demo:
-
-streamlit run demo/streamlit_app.py
-
+This generates a detailed report on model performance across different task complexities, including accuracy, latency, and memory usage metrics.
 
 ## Contributing
 
