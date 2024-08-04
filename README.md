@@ -1,4 +1,4 @@
-# Adaptive LLaMA 3.1 Proxy (ALP 3.1)
+# Adaptive Llama 3.1 Proxy (ALP 3.1)
 
 <div style="display: flex; justify-content: space-between;">
   <img src="./assets/Demo Screenshot 1.png" alt="Demo Screenshot 1" width="48%">
@@ -9,7 +9,7 @@ Adaptive model compression dynamically adjusts the size and complexity of machin
 
 ## Project Overview
 
-Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates adaptive model compression for Llama 3.1, optimizing for different tasks while balancing performance and efficiency. ALP showcases a novel approach to language model deployment, adapting to task complexity in real-time.
+Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South Park Commons Llama 3 Hackathon. It demonstrates adaptive model compression for Llama 3.1 8B, 70B, and 405B, optimizing for different tasks while balancing performance and efficiency. ALP showcases a novel approach to language model deployment, adapting to task complexity in real-time.
 
 ## Key Features
 
