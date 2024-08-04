@@ -28,6 +28,10 @@ class AdaptiveLlamaProxy:
         os.environ['TRANSFORMERS_CACHE'] = self.cache_dir
         os.environ['HF_HOME'] = self.cache_dir
 
+        self.model_usage = {"full": 0, "8bit": 0, "4bit": 0}
+        self.total_requests = 0
+        self.total_memory_saved = 0
+
     def load_classifier(self):
         classifier_path = os.path.join('data', 'task_classifier.joblib')
         if os.path.exists(classifier_path):
@@ -81,6 +85,7 @@ class AdaptiveLlamaProxy:
         return complexity_map.get(task_complexity, 'medium')
 
     def adaptive_generate(self, prompt: str, task_complexity: str = None) -> Dict[str, Any]:
+        self.total_requests += 1
         if task_complexity is None:
             task_complexity = self.classify_task(prompt)
         
@@ -97,6 +102,20 @@ class AdaptiveLlamaProxy:
         
         memory_usage = psutil.virtual_memory().percent
         
+        # Update model usage
+        if model_type == 'simple':
+            self.model_usage['4bit'] += 1
+        elif model_type == 'medium':
+            self.model_usage['8bit'] += 1
+        else:
+            self.model_usage['full'] += 1
+        
+        # Calculate memory savings
+        full_model_size = self.model_sizes['complex']
+        used_model_size = self.model_sizes[model_type]
+        memory_saved = full_model_size - used_model_size
+        self.total_memory_saved += memory_saved
+        
         self.logger.info(f"Generated response using {model_type} model. Time: {generation_time:.2f}s, Memory: {memory_usage}%")
         
         return {
@@ -104,7 +123,15 @@ class AdaptiveLlamaProxy:
             'task_complexity': task_complexity,
             'model_used': model_type,
             'generation_time': generation_time,
-            'memory_usage': memory_usage
+            'memory_usage': memory_usage,
+            'memory_saved': memory_saved
+        }
+
+    def get_metrics(self):
+        return {
+            "modelUsage": self.model_usage,
+            "totalRequests": self.total_requests,
+            "totalMemorySaved": self.total_memory_saved
         }
 
     def generate_response(self, prompt: str, model: Any, tokenizer: Any) -> str:
