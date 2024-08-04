@@ -21,6 +21,10 @@ Adaptive LLaMA Proxy (ALP) is a proof-of-concept system developed for the South 
 - Comprehensive evaluation suite for accuracy, latency, and memory usage
 - Interactive web interface for exploring ALP's capabilities
 
+## How It Works
+
+ALP uses a lightweight machine learning model to classify the complexity of incoming tasks. Based on this classification, it selects an appropriately compressed version of the Llama 3.1 model (2-bit, 4-bit, 8-bit, or full precision). This adaptive approach ensures optimal resource usage while maintaining high-quality outputs.
+
 ## Project Structure
 
 The project consists of two main components:
@@ -130,6 +134,15 @@ python scripts/evaluate_model.py
 
 
 This generates a detailed report on model performance across different task complexities, including accuracy, latency, and memory usage metrics.
+
+## Future Work
+
+We are exploring several avenues for improving ALP:
+1. Implementing more fine-grained compression levels
+2. Enhancing the task complexity classifier with active learning
+3. Extending support to other large language models
+4. Developing a more sophisticated caching mechanism for frequently used model configurations
+
 
 ## Contributing
 
