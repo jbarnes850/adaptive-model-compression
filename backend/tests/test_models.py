@@ -1,3 +1,19 @@
+"""
+This script downloads and tests MLX models for the Adaptive LLaMA Proxy.
+
+To run this script, use the following command from the project root directory:
+python backend/tests/test_models.py [model]
+
+Replace [model] with one of the following options:
+- simple: to test the simple (8B 4-bit quantized) model
+- medium: to test the medium (70B 4-bit quantized) model
+- complex: to test the complex (405B 2-bit quantized) model
+- all: to test all three models
+
+For example:
+python3 backend/tests/test_models.py all
+"""
+
 import os
 import sys
 import time

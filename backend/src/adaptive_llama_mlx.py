@@ -33,7 +33,7 @@ class AdaptiveLlamaProxy:
         self.total_memory_saved = 0
 
     def load_classifier(self):
-        classifier_path = os.path.join('data', 'task_classifier.joblib')
+        classifier_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'task_classifier.joblib')
         if os.path.exists(classifier_path):
             self.task_classifier.load_model(classifier_path)
         else:
