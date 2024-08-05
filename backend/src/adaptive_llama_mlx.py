@@ -1,3 +1,25 @@
+"""
+This file defines the AdaptiveLlamaProxy class, which is the core component of the Adaptive LLaMA Proxy system.
+
+The AdaptiveLlamaProxy dynamically selects and loads the appropriate pre-compressed Llama 3.1 model based on task complexity.
+
+To use this class:
+1. Instantiate the AdaptiveLlamaProxy
+2. Use the adaptive_generate() method to generate responses
+
+The class handles:
+- Dynamic model loading and unloading
+- Task complexity classification
+- Memory management
+- Performance metrics tracking
+
+Example usage:
+    alp = AdaptiveLlamaProxy()
+    response = alp.adaptive_generate("What is the capital of France?")
+
+Note: Ensure that the task classifier is trained and the model files are available before using this class.
+"""
+
 import os
 import time
 import psutil

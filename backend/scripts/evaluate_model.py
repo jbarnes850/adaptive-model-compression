@@ -1,3 +1,21 @@
+"""
+This script evaluates the Adaptive LLaMA Proxy model on a diverse dataset.
+
+To run this script, use the following command from the project root directory:
+python3 backend/scripts/evaluate_model.py
+
+This script will:
+1. Evaluate the adaptive system
+2. Evaluate the full model baseline
+3. Evaluate the compressed model baseline
+4. Plot and save comparison results
+5. Run a long-term test (24 hours by default)
+6. Plot and save long-term test results
+7. Print model sizes
+
+Note: This script may take a considerable amount of time to run, especially the long-term test.
+"""
+
 import sys
 import os
 import time

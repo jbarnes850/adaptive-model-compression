@@ -1,3 +1,18 @@
+"""
+This script trains the task complexity classifier for the Adaptive LLaMA Proxy.
+
+To run this script, use the following command from the project root directory:
+python3 backend/scripts/train_classifier.py
+
+This script will:
+1. Load the MMLU dataset
+2. Train the task complexity classifier
+3. Save the trained classifier
+4. Test the classifier on sample queries
+
+The trained classifier will be saved to 'backend/data/task_classifier.joblib'.
+"""
+
 import sys
 import os
 from datasets import load_dataset, concatenate_datasets

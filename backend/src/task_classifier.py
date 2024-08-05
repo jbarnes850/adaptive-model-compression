@@ -1,3 +1,21 @@
+"""
+This file defines the TaskClassifier class, which is responsible for classifying the complexity of input tasks.
+
+The TaskClassifier uses a combination of feature extraction and machine learning to determine the complexity of a given task.
+
+To use this classifier:
+1. Instantiate the TaskClassifier class
+2. Train the classifier using the train() method with a list of queries and their corresponding labels
+3. Use the classify() or classify_with_confidence() methods to classify new tasks
+
+Example:
+    classifier = TaskClassifier()
+    classifier.train(queries, labels)
+    complexity, confidence = classifier.classify_with_confidence("What is the capital of France?")
+
+Note: Make sure to have the 'en_core_web_sm' spaCy model installed before using this classifier.
+"""
+
 import numpy as np
 import pandas as pd
 import joblib

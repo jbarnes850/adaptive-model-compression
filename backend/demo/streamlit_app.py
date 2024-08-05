@@ -1,3 +1,23 @@
+"""
+This file contains the Streamlit app for demonstrating the Adaptive LLaMA Proxy.
+
+To run this Streamlit app:
+1. Ensure all dependencies are installed (streamlit, plotly, etc.)
+2. Navigate to the project root directory
+3. Run the following command:
+   streamlit run backend/demo/streamlit_app.py
+
+This will start the Streamlit server and open the app in your default web browser.
+
+The app allows users to:
+- Select between adaptive and fixed complexity modes
+- Input prompts for the model to process
+- View the generated responses
+- See performance metrics and visualizations of the model selection process
+
+Note: Make sure the AdaptiveLlamaProxy is properly set up and the task classifier is trained before running this app.
+"""
+
 import streamlit as st
 import sys
 import os
